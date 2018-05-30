@@ -10,10 +10,36 @@
 
 #include <vector>
 
-class edge;
+class node;
+
+class edge
+{
+protected:
+	node *bgn, *end;
+	int amt;
+
+	void connect_bgn(node& Nod) {bgn=&Nod;};
+	void connect_end(node& Nod) {end=&Nod;};
+	void disconnect_bgn() {bgn=nullptr;};
+	void disconnect_end() {end=nullptr;};
+
+public:
+	edge(): bgn(nullptr), end(nullptr) {};
+	virtual ~edge() {disconnect(*this);}
+
+	friend node;
+	friend void connect (edge& edg, node& bgnn, node& endn);
+	friend void disconnect (edge& edg);
+	virtual int size () const noexcept=0;
+    virtual void take() noexcept=0;
+    virtual void add() noexcept=0;
+};
 
 class node
 {
+virtual bool space()=0;
+//virtual bool materials ()=0;
+
 protected:
 	std::vector<edge*> Ing;
 	std::vector<edge*> Outg;
@@ -28,25 +54,6 @@ public:
 	friend void connect (edge& edg, node& bgnn, node& endn);
 	friend void disconnect (edge& edg);
 	virtual void run()=0;
-};
-
-class edge
-{
-protected:
-	node *bgn, *end;
-
-	void connect_bgn(node& Nod) {bgn=&Nod;};
-	void connect_end(node& Nod) {end=&Nod;};
-	void disconnect_bgn() {bgn=nullptr;};
-	void disconnect_end() {end=nullptr;};
-
-public:
-	edge(): bgn(nullptr), end(nullptr) {};
-	virtual ~edge() {disconnect(*this);};
-
-	friend node;
-	friend void connect (edge& edg, node& bgnn, node& endn);
-	friend void disconnect (edge& edg);
 };
 
 void connect (edge& edg, node& bgnn, node& endn) {
