@@ -9,6 +9,7 @@
 #define GRAPH_HPP_
 
 #include <vector>
+#include <iostream>
 
 class node;
 
@@ -24,8 +25,7 @@ protected:
 	void disconnect_end() {end=nullptr;};
 
 public:
-	edge(): bgn(nullptr), end(nullptr) {};
-	virtual ~edge() {disconnect(*this);}
+	edge(): bgn(nullptr), end(nullptr), amt(0) {};
 
 	friend node;
 	friend void connect (edge& edg, node& bgnn, node& endn);
@@ -33,6 +33,8 @@ public:
 	virtual int size () const noexcept=0;
     virtual void take() noexcept=0;
     virtual void add() noexcept=0;
+
+    virtual ~edge() {disconnect(*this);}
 };
 
 class node
@@ -64,6 +66,7 @@ void connect (edge& edg, node& bgnn, node& endn) {
 	}
 
 void disconnect (edge& edg) {
+	if(edg.bgn!=nullptr){
 	for (unsigned int i=0; i<edg.bgn->Outg.size(); i++)
 	{
 		if (edg.bgn->Outg[i]==&edg) {
@@ -71,12 +74,15 @@ void disconnect (edge& edg) {
 			break;
 		}
 	}
+	}
+	if (edg.end!=nullptr){
 	for (unsigned int i=0; i<edg.end->Ing.size(); i++)
 	{
 		if (edg.bgn->Ing[i]==&edg) {
 			edg.bgn->Ing.erase (edg.bgn->Ing.begin()+i);
 			break;
 		}
+	}
 	}
 	edg.disconnect_bgn();
 	edg.disconnect_end();
