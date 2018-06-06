@@ -28,7 +28,7 @@ public:
 	edge(): bgn(nullptr), end(nullptr), amt(0) {};
 
 	friend node;
-	friend void connect (edge& edg, node& bgnn, node& endn);
+	friend void connect_nodes (edge& edg, node& bgnn, node& endn);
 	friend void disconnect (edge& edg);
 	virtual int size () const noexcept=0;
     virtual void take() noexcept=0;
@@ -40,30 +40,31 @@ public:
 class node
 {
 virtual bool space()=0;
-//virtual bool materials ()=0;
 
 protected:
 	std::vector<edge*> Ing;
 	std::vector<edge*> Outg;
 
 public:
+
 	virtual ~node() {
 		for (unsigned int i=0; i<Ing.size(); i++) Ing[i]->disconnect_end();
 		for (unsigned int i=0; i<Outg.size(); i++) Outg[i]->disconnect_bgn();
 	};
-
-	friend edge;
-	friend void connect (edge& edg, node& bgnn, node& endn);
+    friend edge;
+	friend void connect_nodes (edge& edg, node& bgnn, node& endn);
 	friend void disconnect (edge& edg);
 	virtual void run()=0;
+	virtual edge& connect (node& endn)=0;
 };
 
-void connect (edge& edg, node& bgnn, node& endn) {
+void connect_nodes (edge& edg, node& bgnn, node& endn) {
 		edg.connect_bgn(bgnn);
 		edg.connect_end(endn);
 		bgnn.Outg.push_back(&edg);
 		endn.Ing.push_back(&edg);
 	}
+
 
 void disconnect (edge& edg) {
 	if(edg.bgn!=nullptr){

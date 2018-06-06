@@ -46,15 +46,17 @@ public: virtual ~bodyElectronics(){};
 
 template <class C> class conveyor : public edge {
 C element;
+int limit;
 
 public:
-conveyor () {};
+conveyor (): limit(10) {};
 virtual ~conveyor(){};
 
 virtual int size () const noexcept {return amt;};
 virtual void take() noexcept {--amt;};
 virtual void add() noexcept {++amt;};
 };
+template<> conveyor<bodyElectronics>::conveyor(): limit(99999) {};
 
 template <class C> class productionSite : public node {
 	virtual bool space() {
@@ -69,6 +71,7 @@ template <class C> class productionSite : public node {
 
 public:
 virtual ~productionSite() {};
+
 virtual void run() {
 if (this->space())
 {
@@ -78,9 +81,16 @@ for_each(Outg.begin(), Outg.end(), [&min](edge* ed) {if (auto edptr=dynamic_cast
 min->add();
 }
 }
+
+virtual edge& connect (node& endn)
+{
+edge& edg= *(new conveyor<C>);
+connect_nodes (edg, dynamic_cast<node&>(*this), endn);
+return edg;
+}
 };
 
-template <class C> class assemblySite : public node {
+template <class C> class assemblySite : public node{
 virtual bool space() {
 		if (Outg.size()==0) return 0;
 	return any_of(Outg.begin(), Outg.end(), [](edge* ed) {
@@ -103,6 +113,13 @@ for_each(Outg.begin(), Outg.end(), [&min](edge* ed) {if (auto edptr=dynamic_cast
 this->take_materials();
 min->add();
 }
+}
+
+virtual edge& connect (node& endn)
+{
+edge& edg= *(new conveyor<C>);
+connect_nodes (edg, dynamic_cast<node&>(*this), endn);
+return edg;
 }
 };
 
@@ -153,6 +170,15 @@ template<> bool assemblySite<bodyTires>::materials(){
 		return (bbp && it>=4);
 }
 
+template<> bool assemblySite<carElement>::materials() {
+if (Ing.size()==0) return 0;
+		return any_of(Ing.begin(), Ing.end(), [](edge* ed) {
+			conveyor<bodyElectronics>* edptr= dynamic_cast<conveyor<bodyElectronics>*>(ed);
+			if(ed->size()>0 && edptr) return 1;
+			return 0;
+		});
+};
+
 template<> void assemblySite<bodyPaint>::take_materials(){
 edge* max;
 for(int i=0; i<Ing.size(); i++) {if (auto edptr=dynamic_cast<conveyor<bodyEngine>*>(Ing[i])) max=Ing[i]; break;};
@@ -189,4 +215,5 @@ for (int j=0; j<4; j++){
 }
 }
 
+template<> void assemblySite<carElement>::take_materials() {};
 #endif /* CARASSEMBLYLINE_HPP_ */
